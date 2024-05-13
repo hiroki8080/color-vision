@@ -1,3 +1,9 @@
-#canvas {
+#canvas-input {
   background: aquamarine;
+}
+#canvas-result {
+  background: wheat;
+}
+#canvas-result2 {
+  background: lightcyan;
 }
