@@ -1,5 +1,7 @@
 (function () {
     const canvas = document.getElementById("canvas-input");
+    const imgText = document.getElementById("img-text");
+    const resText = document.getElementById("res-text");
     const ctx = canvas.getContext("2d", {
         willReadFrequently: true
     });
@@ -13,6 +15,8 @@
     var threshold = 30;
     var firstCheck = true;
     var points = [];
+    var point_list = [];
+    var id = 1;
     document.getElementById("canvas-input").addEventListener("mousedown", onCanvasMouseDown);
     document.getElementById("canvas-input").addEventListener("mousemove", onCanvasMouseMove);
     document.getElementById("canvas-input").addEventListener("mouseup", onCanvasMouseUp);
@@ -46,20 +50,23 @@
             if(firstCheck){
                 firstCheck = false;
                 let radian = Math.atan2(startY - beforeY, startX - beforeX);
-                beforeAngle = radian * (180 / Math.PI);
+                beforeAngle =  Math.abs(radian * (180 / Math.PI));
                 interval = 5;
                 beforeY = startY;
                 beforeX = startX;
             }else{
                 let radian = Math.atan2(startY - beforeY, startX - beforeX);
-                let angle = radian * (180 / Math.PI);
+                let angle =  Math.abs(radian * (180 / Math.PI));
                 interval = 5;
                 beforeY = startY;
                 beforeX = startX;
                 if (Math.abs(beforeAngle - angle) > threshold){
+                    console.log("beforeAngle : " + beforeAngle);
+                    console.log("angle : " + angle);
+                    console.log("diff : " + Math.abs(beforeAngle - angle));
                     setPoint(beforeX, beforeY);
                 }
-                beforeAngle = angle;
+                beforeAngle =  Math.abs(angle);
             }
         }
     }
@@ -71,36 +78,54 @@
         ctx.arc(x, y, 10, 0, 2 * Math.PI);
         ctx.closePath();
         ctx.fill();
-        const point = [x, y]
+        let point = [x, y]
         var near = false;
         points.forEach(element => {
-            console.log(Math.abs(point[0]-element[0]));
-            console.log(Math.abs(point[1]-element[1]));
-            if (Math.abs(point[0]-element[0]) < 10 && Math.abs(point[1]-element[1])) {
+            // console.log("diff1 : " + Math.abs(point[0]-element[0]));
+            // console.log("diff2 : " + Math.abs(point[1]-element[1]));
+            if (Math.abs(point[0]-element[0]) < 15 && Math.abs(point[1]-element[1]) < 15) {
                 near = true;
             }
         });
         if (!near) {
             points.push(point);
         }
+        return near;
     }
 
     function onCanvasMouseUp(event) {
         if(isDrawing){
             scrutinize();
-            setPoint(startX, startY);
+            let near = setPoint(startX, startY);
+            point_list.push({"id": id++, "points": points, "is_outer_closed": near});
+            imgText.textContent = JSON.stringify(point_list);
+            imgText.focus();
+            setTimeout(chnageFocus, 1000); // Forcibly generate input event by focus change.
         }
-        console.log(points);
         points = [];
         isDrawing = false;
     }
-    function onCanvasMouseLeave(event) {
-        if(isDrawing){
-            scrutinize();
-            setPoint(startX, startY);
-        }
-        scrutinize();
+
+    function chnageFocus(){
+        resText.focus();
     }
+
+    function callback() {
+        console.log('callback');
+    }
+
+    const config = { attributes: true, childList: true, subtree: true };
+    const observer = new MutationObserver(callback);
+    observer.observe(imgText, config);
+    observer.disconnect();
+
+    // function onCanvasMouseLeave(event) {
+    //     if(isDrawing){
+    //         scrutinize();
+    //         setPoint(startX, startY);
+    //     }
+    //     scrutinize();
+    // }
 
     function scrutinize(){
         let src = cv.imread('canvas-input');
@@ -111,7 +136,6 @@
         let contours = new cv.MatVector();
         let hierarchy = new cv.Mat();
         cv.findContours(dstTh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-        let endDst = new cv.Mat();
         for (let i = 0; i < contours.size(); i++)
         {
             var cnt = contours.get(i);
@@ -127,10 +151,6 @@
         dstTh.delete();
         contours.delete();
         hierarchy.delete();
-        endDst.delete();
     }
 
-    function onOpenCvReady(){
-
-    }
 }());
