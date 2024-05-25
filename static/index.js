@@ -1,4 +1,5 @@
 (function () {
+    localStorage.setItem("color-vision-data", "");
     const canvas = document.getElementById("canvas-input");
     const imgText = document.getElementById("img-text");
     const resText = document.getElementById("res-text");
@@ -97,17 +98,28 @@
         if(isDrawing){
             scrutinize();
             let near = setPoint(startX, startY);
-            point_list.push({"id": id++, "points": points, "is_outer_closed": near});
-            imgText.textContent = JSON.stringify(point_list);
+            point_list.push({"id": id++, "points": points, "outer_closed": near});
+            data = {"input": point_list};
+            point_list_str = JSON.stringify(data);
+            localStorage.setItem("color-vision-data", point_list_str);
+            imgText.textContent = point_list_str;
             imgText.focus();
-            setTimeout(chnageFocus, 1000); // Forcibly generate input event by focus change.
+            setInterval(chnageResTextFocus, 500); // Forcibly generate input event by focus change.
+            setInterval(chnageImgTextFocus, 1000); // Forcibly generate input event by focus change.
         }
         points = [];
         isDrawing = false;
+        beforeAngle = 0;
+        firstCheck = true;
     }
 
-    function chnageFocus(){
+    function chnageResTextFocus(){
         resText.focus();
+    }
+
+    function chnageImgTextFocus(){
+        imgText.textContent = localStorage.getItem("color-vision-data");
+        imgText.focus();
     }
 
     function callback() {
@@ -144,7 +156,7 @@
             let color = new cv.Scalar(255, 255, 255);
             if (area > 5000 && area < 50000) cv.drawContours(dst, contours, i, color, cv.FILLED);
         }
-        cv.imshow("canvas-result",dst);
+        // cv.imshow("canvas-result",dst);
 
         src.delete();
         dst.delete();
