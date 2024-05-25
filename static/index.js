@@ -104,11 +104,13 @@
             localStorage.setItem("color-vision-data", point_list_str);
             imgText.textContent = point_list_str;
             imgText.focus();
-            setInterval(chnageResTextFocus, 1000); // Forcibly generate input event by focus change.
-            setInterval(chnageImgTextFocus, 2000); // Forcibly generate input event by focus change.
+            setInterval(chnageResTextFocus, 500); // Forcibly generate input event by focus change.
+            setInterval(chnageImgTextFocus, 1000); // Forcibly generate input event by focus change.
         }
         points = [];
         isDrawing = false;
+        beforeAngle = 0;
+        firstCheck = true;
     }
 
     function chnageResTextFocus(){
